@@ -1,0 +1,287 @@
+---
+title: "UChicago Crime Map"
+format: html
+editor: source
+editor_options: 
+  chunk_output_type: inline
+---
+
+```{r}
+#| label: setup
+#| message: false
+#| warning: false
+#| results: false
+library(tidyverse)
+library(rvest)
+library(ggmap)
+library(tidygeocoder)
+library(sf)
+library(here)
+library(lubridate)
+library(leaflet)
+library(shiny)
+```
+
+```{r}
+#| label: Crime DF Function
+
+get_crime_df <- function() {
+  # generate link
+  end <- date(today())
+  link <- str_glue("https://incidentreports.uchicago.edu/",
+             "incidentReportArchive.php?",
+             "startDate=09%2F26%2F2023&",
+             "endDate={month(end)}%2F{day(end)}%2F{year(end)}")
+  
+  # find total # of pages
+  crime_site <- read_html(link)
+  xpath = paste0('//*[contains(concat( " ", @class, " " ),', 
+               'concat( " ", "page-count", " " ))]')
+
+  num_pages <- html_element(crime_site, xpath = xpath) %>% 
+    html_text() %>% 
+    str_remove("1 / ") %>% 
+    as.integer()
+  
+  # create df from every table
+  offset_sequence = seq(from = 0, to = num_pages)
+  link_vec = rep(c(0), num_pages)
+
+  for (offset in offset_sequence) {
+    link_vec[offset] = str_glue(link, "&offset={(offset - 1)* 5}")
+  }
+
+  crime_list <- rep(list(data.frame()), num_pages)
+
+  for (i in 1:num_pages) {
+    crime_list[[i]] <- read_html(link_vec[i]) %>% 
+      html_element("table") %>%
+      html_table()
+  }
+
+  crime_df <- bind_rows(crime_list)
+  return(crime_df)
+}
+```
+
+
+```{r}
+#| label: Basic Filtering
+crime_df <- get_crime_df()
+
+clean_crime_df <- crime_df %>% 
+  filter(str_detect(Incident, "Theft|Armed Robbery|Battery|Assault")) %>% 
+  mutate(
+    Location = str_replace_all(Location, " \\(.*\\)", ""),
+    Location = str_replace(
+      Location, # it's not listed as an address 
+      "Harper between 53rd & 54th", # so i gave it one
+      "5330 S Harper Ave"
+    ),
+    Location = str_replace(
+      Location,
+      "Harper between 54th & 55th",
+      "5419 S Harper Ave"
+    ),
+    Location = str_replace(
+      Location,
+      "Drexel between 52nd & 53rd",
+      "5225 S Drexel Ave"
+    ),
+    Location = str_replace(
+      Location,
+      "5400 S. Kenwood \\(Public Way",
+      "5400 S. Kenwood Ave"
+    ),
+    Location = str_replace(
+      Location,
+      "Woodlawn between 50th & 51st",
+      "5050 S. Woodlawn Ave"
+    ),
+    Location = str_replace(
+      Location,
+      "Ingleside between 54th & 55th",
+      "5445 S. Ingleside Ave"
+    )
+  ) %>% 
+  mutate(Location = str_glue("{Location}, Chicago, IL")) %>% 
+  mutate(
+    Incident = if_else(str_detect(Incident, "Theft"), "Theft", Incident),
+    Incident = if_else(str_detect(Incident, "Armed Robbery"), 
+                       "Armed Robbery", Incident),
+    Incident = if_else(str_detect(Incident, "Battery|Assault"), 
+                       "Battery/Assault", Incident)
+    
+  )
+
+crime_lat_longs <- clean_crime_df %>%
+  geocode(Location, method = "census", lat = lat , long = long) %>% 
+  na.omit()
+
+crime_sf <- st_as_sf(
+    crime_lat_longs, 
+    coords = c("long", "lat")
+  )
+```
+
+```{r}
+#| label: Preliminary Mapping
+chicago <- read_sf(
+  here(
+    "data",
+    "SHP_chicago-communities",
+    "geo_export_e07d67fa-91ce-4d30-9da3-eb903021731c.shp"
+  )
+)
+
+st_crs(chicago) <- st_crs(crime_sf)
+
+bounding_box <- st_bbox(crime_sf)
+bbox_expansion <- 0.01
+
+ggplot(crime_sf) + 
+  geom_sf() +
+  geom_sf(
+    data = chicago,
+    color = "black",
+    fill = NA
+  ) +
+  coord_sf(
+    xlim = c(bounding_box['xmin'] - bbox_expansion, 
+             bounding_box['xmax'] + bbox_expansion),
+    ylim = c(bounding_box['ymin'] - bbox_expansion, 
+             bounding_box['ymax'] + bbox_expansion),
+  )
+```
+
+```{r}
+#| label: ggmap 
+# register_stadiamaps("api-key", write = TRUE)
+hyde_park_bbox <- c(left = -87.610,
+                    bottom = 41.783,
+                    right = -87.583,
+                    top = 41.805)
+
+hyde_park <- get_stadiamap(
+    hyde_park_bbox, 
+    zoom = 15, 
+    maptype = "alidade_smooth_dark"
+  )
+
+ggmap(hyde_park) +
+  geom_point(
+    data = crime_lat_longs, 
+    mapping = aes(x = long, y = lat, color = Incident),
+  ) +
+  scale_color_manual(
+    values = c(
+      "Armed Robbery" = "red",
+      "Theft" = "pink",
+      "Battery/Assault" = "orange"
+    )
+  ) +
+  theme_void()
+```
+
+```{r}
+#| label: leaflet
+tag.map.title <- tags$style(HTML("
+  .leaflet-control.map-title { 
+    transform: translate(0%,0%);
+    position: fixed !important;
+    bottom: 0.75%;
+    text-align: center;
+    padding-left: 0.3em; 
+    padding-right: 0.3em; 
+    background: rgba(255,255,255,0.5);
+    font-weight: bold;
+    font-size: 3em;
+    font-color: 'white';
+  }
+"))
+
+title <- tags$div(
+  tag.map.title, HTML("UChicago Crime – SY23-24")
+)  
+
+# Stadia.AlidadeSmoothDark
+leaflet_map <- leaflet(
+    data = crime_sf,
+    options = leafletOptions(minZoom = 15)
+   ) %>% 
+  addTiles() %>%
+  addControl(
+    title, position = "bottomleft", className="map-title"
+  ) %>% 
+  setView(
+    lng = -87.594633, 
+    lat = 41.793983, 
+    zoom = 15
+  ) %>% 
+  setMaxBounds(
+    lng1 = -87.610,
+    lat1 = 41.783,
+    lng2 = -87.583,
+    lat2 = 41.805
+  ) %>% 
+  addProviderTiles(
+    providers$Stadia.AlidadeSmoothDark
+  ) %>% 
+  addCircleMarkers(
+    label = ~ str_glue("{Incident} on {Occurred}"), # line break only with popup
+    color = ~ if_else(Incident == "Armed Robbery", "red", 
+                      if_else(Incident == "Battery/Assault", "orange", "pink")),
+    fillOpacity = 0.8,
+    radius = ~ if_else(Incident == "Armed Robbery", 7, 
+                       if_else(Incident == "Battery/Assault", 5, 4)),
+    stroke = FALSE
+  ) %>% 
+  addLegend(
+    title = "Crime Type",
+    position = "bottomright",
+    colors = c("red", "orange", "pink"),
+    labels = c("Armed Robbery", "Battery/Assault", "Theft")
+  )
+leaflet_map
+
+htmlwidgets::saveWidget(leaflet_map, file = "index.html")
+```
+
+
+```{r}
+#| label: Shiny
+
+ui <- fillPage(
+  title = "UChicago Crime",
+  leafletOutput("leaflet_map", width = "100%", height = "100%"),
+  p()
+)
+
+server <- function(input, output, session) {
+  output$leaflet_map <- renderLeaflet({
+    leaflet(data = crime_sf) %>% 
+      addTiles() %>%
+      addControl(title, position = "bottomleft", className="map-title") %>% 
+      setView(lng = -87.594633, lat = 41.793983, zoom = 14) %>% 
+      addProviderTiles(providers$Stadia.AlidadeSmoothDark) %>% 
+      addCircleMarkers(
+        label = ~ str_glue("{Incident} on {Occurred}"), # line break only with popup
+        color = ~ if_else(Incident == "Armed Robbery", "red", 
+                          if_else(Incident == "Battery/Assault", "orange", "pink")),
+        fillOpacity = 0.8,
+        radius = ~ if_else(Incident == "Armed Robbery", 5, 
+                           if_else(Incident == "Battery/Assault", 4, 3)),
+        stroke = FALSE
+      ) %>% 
+      addLegend(
+        title = "Crime Type",
+        position = "bottomright",
+        colors = c("red", "orange", "pink"),
+        labels = c("Armed Robbery", "Battery/Assault", "Theft")
+      )
+  })
+}
+
+shinyApp(ui, server = server)
+```
+
