@@ -244,7 +244,9 @@ leaflet_map <- leaflet(
   )
 leaflet_map
 
-htmlwidgets::saveWidget(leaflet_map, file = "index.html")
+htmlwidgets::saveWidget(leaflet_map, 
+                        file = "index.html", 
+                        title = "SY23-24 UChicago Crime")
 ```
 
 
