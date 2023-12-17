@@ -1,0 +1,210 @@
+---
+title: "hotspot-analysis"
+format: html
+---
+
+```{r}
+#| label: setup
+library(tidyverse)
+library(ggmap)
+library(DBI)
+library(duckdb)
+library(here)
+library(sf)
+library(sfdep)
+library(cowplot)
+```
+
+```{r}
+#| label: Importing Data
+con <- DBI::dbConnect(duckdb(), dbdir = here("data/duckdb/crime.db"))
+sql <- "SELECT * FROM crimes"
+crime_sf <- st_read(con, query = sql, geometry_column = "geometry")
+```
+
+```{r}
+#| label: Netting and Mapping
+# ggmap
+hotspot_bounds <- c(
+    left = -87.610,
+    bottom = 41.780,
+    right = -87.575,
+    top = 41.810
+  )
+
+hotspot_map <- get_stadiamap(
+    hotspot_bounds, 
+    zoom = 15, 
+    maptype = "outdoors"
+  )
+
+# grid bounds
+xlims <- c(-87.610, -87.575)
+ylims <- c(41.780, 41.810)
+
+box_coords <- tibble(x = xlims, y = ylims) %>% 
+  st_as_sf(coords = c("x", "y")) %>% 
+  st_set_crs(st_crs(crime_sf))
+
+grid <- st_make_grid(box_coords, n = 25, square = FALSE)
+
+grid <- grid %>% 
+  st_as_sf() %>% 
+  mutate(id = row_number())
+
+crime_counts <- st_join(crime_sf %>% 
+                          filter(str_detect(Incident, "Armed Robbery")), 
+                        grid) %>% 
+  st_drop_geometry() %>% 
+  count(id, name = "crimes")
+
+crime_hex <- left_join(grid, crime_counts) %>% 
+  mutate(
+    crimes = if_else(is.na(crimes), 0, crimes)
+  )
+
+ggplot(crime_hex, aes(fill = crimes)) + 
+  geom_sf(color = "black", lwd = 0.15) +
+  theme_void() +
+  scale_fill_viridis_c()
+
+ggmap(hotspot_map) +
+  geom_sf(data = crime_hex, aes(fill = crimes), inherit.aes = FALSE,
+          color = "black", lwd = 0, alpha = 0.5) +
+  theme_void() +
+  scale_fill_viridis_c()
+```
+
+```{r}
+#| label: Hotspot Analysis
+
+crime_lag <- crime_hex %>% 
+  mutate(
+    neighbors = st_contiguity(x),
+    weights = st_weights(neighbors),
+    crimes_lag = st_lag(crimes, neighbors, weights)
+  )
+
+# p-value < 2.2e-16 !!!!
+global_g_test(crime_lag$crimes, crime_lag$neighbors, crime_lag$weights)
+
+crime_hotspots <- crime_lag %>% 
+  mutate(
+    Gi = local_g_perm(crimes, neighbors, weights)
+  ) %>% 
+  unnest(Gi) %>% 
+  mutate(
+    classification = case_when(
+      gi > 0 & p_folded_sim <= 0.01 ~ "Very Hot",
+      gi > 0 & p_folded_sim <= 0.05 ~ "Hot",
+      gi > 0 & p_folded_sim <= 0.1 ~ "Somewhat Hot",
+      gi < 0 & p_folded_sim <= 0.01 ~ "Very Cold",
+      gi < 0 & p_folded_sim <= 0.05 ~ "Cold",
+      gi < 0 & p_folded_sim <= 0.1 ~ "Somewhat Cold",
+      TRUE ~ "Insignificant"
+    ),
+    classification = factor(
+      classification,
+      levels = c("Very Hot", "Hot", "Somewhat Hot",
+                 "Insignificant",
+                 "Somewhat Cold", "Cold", "Very Cold")
+    )
+  ) 
+
+
+ggplot(crime_hotspots, 
+       aes(
+         fill = fct_rev(classification),
+         alpha = fct_rev(classification)
+       )
+  ) +
+  geom_sf(color = "black", lwd = 0) +
+  labs(
+    fill = "Hotspot Status",
+    alpha = "Hotspot Status",
+  ) +
+  scale_fill_viridis_d(option = "C", direction = -1) +
+  scale_alpha_manual(
+    values = c(0.3, 0.5, 0.6, 0.7),
+    labels = c("Insignificant", "Somewhat Hot", "Hot", "Very Hot")
+  ) +
+  theme_void() 
+
+```
+
+
+
+
+
+```{r}
+#| label: Hotspot Mapping
+#| warning: false
+
+legend_labels <- c(
+  "Insignificant (p > 0.1)", 
+  "Somewhat Hot (p < 0.1)", 
+  "Hot (p < 0.05)", 
+  "Very Hot (p < 0.01)")
+
+full_hotspot_map <- ggmap(hotspot_map) +
+  geom_sf(
+    data = crime_hotspots,
+    aes(
+      fill = fct_rev(classification),
+      alpha = fct_rev(classification)
+    ),
+    inherit.aes = FALSE,
+    lwd = 0
+  ) +
+  labs(
+    title = "UChicago Armed Robbery Hotspots",
+    fill = "Hotspot Status",
+    alpha = "Hotspot Status",
+    caption = "Source: UCPD Crime Data, 2020-2023"
+  ) +
+  scale_fill_viridis_d(
+    option = "C", 
+    direction = -1,
+    labels = legend_labels,
+    guide = guide_legend(reverse = TRUE)
+  ) +
+  scale_alpha_manual(
+    values = c(0.3, 0.5, 0.6, 0.7),
+    labels = legend_labels,
+    guide = guide_legend(reverse = TRUE)
+  ) +
+  theme_void() +
+  theme(
+    plot.background = element_rect(fill = "gray10",
+                                   color = "gray10"),
+    
+    plot.title = element_text(family = "Space Grotesk",
+                              face = "bold",
+                              size = 22,
+                              color = "white",
+                              margin = margin(0, 0, 5,)),
+    legend.title = element_text(family = "Space Grotesk",
+                                face = "semibold",
+                                color = "white"),
+    legend.text = element_text(family = "Space Grotesk",
+                                color = "white"),
+    plot.caption = element_text(family = "Space Grotesk",
+                                color = "white",
+                                hjust = 0),
+    plot.margin = margin(5, 5, 5, 5)
+  )
+
+ggdraw(full_hotspot_map) +
+  theme(
+    plot.background = element_rect(fill = "gray10",
+                                   color = "gray10")
+  )
+
+ggsave(
+  here("plots/armed-robbery-hotspots.png"), 
+  width = 8,
+  height = 5
+)
+
+```
+

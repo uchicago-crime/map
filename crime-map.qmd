@@ -12,115 +12,28 @@ editor_options:
 #| warning: false
 #| results: false
 library(tidyverse)
-library(rvest)
+library(DBI)
+library(duckdb)
 library(ggmap)
-library(tidygeocoder)
 library(sf)
 library(here)
-library(lubridate)
 library(leaflet)
 library(shiny)
 ```
 
-```{r}
-#| label: Crime DF Function
-
-get_crime_df <- function() {
-  # generate link
-  end <- date(today())
-  link <- str_glue("https://incidentreports.uchicago.edu/",
-             "incidentReportArchive.php?",
-             "startDate=09%2F26%2F2023&",
-             "endDate={month(end)}%2F{day(end)}%2F{year(end)}")
-  
-  # find total # of pages
-  crime_site <- read_html(link)
-  xpath = paste0('//*[contains(concat( " ", @class, " " ),', 
-               'concat( " ", "page-count", " " ))]')
-
-  num_pages <- html_element(crime_site, xpath = xpath) %>% 
-    html_text() %>% 
-    str_remove("1 / ") %>% 
-    as.integer()
-  
-  # create df from every table
-  offset_sequence = seq(from = 0, to = num_pages)
-  link_vec = rep(c(0), num_pages)
-
-  for (offset in offset_sequence) {
-    link_vec[offset] = str_glue(link, "&offset={(offset - 1)* 5}")
-  }
-
-  crime_list <- rep(list(data.frame()), num_pages)
-
-  for (i in 1:num_pages) {
-    crime_list[[i]] <- read_html(link_vec[i]) %>% 
-      html_element("table") %>%
-      html_table()
-  }
-
-  crime_df <- bind_rows(crime_list)
-  return(crime_df)
-}
-```
-
 
 ```{r}
-#| label: Basic Filtering
-crime_df <- get_crime_df()
+#| label: Importing and Cleaning Data
+con <- DBI::dbConnect(duckdb(), dbdir = here("data/duckdb/crime.db"))
+sql <- "SELECT * FROM crimes WHERE reported_date >= '2023-09-25'"
 
-clean_crime_df <- crime_df %>% 
-  filter(str_detect(Incident, "Theft|Armed Robbery|Battery|Assault")) %>% 
-  mutate(
-    Location = str_replace_all(Location, " \\(.*\\)", ""),
-    Location = str_replace(
-      Location, # it's not listed as an address 
-      "Harper between 53rd & 54th", # so i gave it one
-      "5330 S Harper Ave"
-    ),
-    Location = str_replace(
-      Location,
-      "Harper between 54th & 55th",
-      "5419 S Harper Ave"
-    ),
-    Location = str_replace(
-      Location,
-      "Drexel between 52nd & 53rd",
-      "5225 S Drexel Ave"
-    ),
-    Location = str_replace(
-      Location,
-      "5400 S. Kenwood \\(Public Way",
-      "5400 S. Kenwood Ave"
-    ),
-    Location = str_replace(
-      Location,
-      "Woodlawn between 50th & 51st",
-      "5050 S. Woodlawn Ave"
-    ),
-    Location = str_replace(
-      Location,
-      "Ingleside between 54th & 55th",
-      "5445 S. Ingleside Ave"
-    )
-  ) %>% 
-  mutate(Location = str_glue("{Location}, Chicago, IL")) %>% 
+crime_sf <- st_read(con, query = sql, geometry_column = "geometry") %>% 
   mutate(
     Incident = if_else(str_detect(Incident, "Theft"), "Theft", Incident),
     Incident = if_else(str_detect(Incident, "Armed Robbery"), 
                        "Armed Robbery", Incident),
     Incident = if_else(str_detect(Incident, "Battery|Assault"), 
                        "Battery/Assault", Incident)
-    
-  )
-
-crime_lat_longs <- clean_crime_df %>%
-  geocode(Location, method = "census", lat = lat , long = long) %>% 
-  na.omit()
-
-crime_sf <- st_as_sf(
-    crime_lat_longs, 
-    coords = c("long", "lat")
   )
 ```
 
@@ -248,6 +161,61 @@ htmlwidgets::saveWidget(leaflet_map,
                         file = "index.html", 
                         title = "SY23-24 UChicago Crime")
 ```
+
+```{r}
+#| label: Hotspot Analysis
+hotspot_bounds <- c(
+    left = -87.610,
+    bottom = 41.783,
+    right = -87.583,
+    top = 41.805
+  )
+
+xlims <- c(-87.610, -87.583)
+ylims <- c(41.783, 41.805)
+
+box_coords <- tibble(x = xlims, y = ylims) %>% 
+  st_as_sf(coords = c("x", "y")) %>% 
+  st_set_crs(st_crs(crime_sf))
+
+bounding_box <- st_bbox(box_coords) %>% st_as_sfc()
+
+bounded_crime_sf <- st_intersection(crime_sf, bounding_box)
+
+hotspot_map <- get_stadiamap(
+    hotspot_bounds, 
+    zoom = 15, 
+    maptype = "alidade_smooth"
+  )
+
+
+grid <- st_make_grid(bounded_crime_sf, square = FALSE)
+
+valid_indices <- which(lengths(st_intersects(grid, bounded_crime_sf)) > 0)
+
+fishnet <- grid[valid_indices] %>% 
+  st_as_sf() %>% 
+  mutate(id = row_number())
+
+grid <- grid %>% 
+  st_as_sf() %>% 
+  mutate(id = row_number())
+
+crime_counts <- st_join(bounded_crime_sf, grid) %>% 
+  st_drop_geometry() %>% 
+  count(id)
+
+fin_map <- left_join(grid, crime_counts) %>% 
+  mutate(
+    n = if_else(is.na(n), 0, n)
+  )
+
+ggplot(fin_map, aes(fill = n)) + 
+  geom_sf(color = "black", lwd = 0.15) +
+  theme_void() +
+  scale_fill_viridis()
+```
+
 
 
 ```{r}
