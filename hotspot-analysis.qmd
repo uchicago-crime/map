@@ -183,8 +183,7 @@ full_hotspot_map <- ggmap(hotspot_map) +
                               size = 22,
                               color = "white",
                               margin = margin(0, 0, 5,)),
-    legend.title = element_text(family = "Space Grotesk",
-                                face = "semibold",
+    legend.title = element_text(family = "Space Grotesk Semibold",
                                 color = "white"),
     legend.text = element_text(family = "Space Grotesk",
                                 color = "white"),
@@ -203,8 +202,7 @@ ggdraw(full_hotspot_map) +
 ggsave(
   here("plots/armed-robbery-hotspots.png"), 
   width = 8,
-  height = 5
+  height = 4.5
 )
-
 ```
 
