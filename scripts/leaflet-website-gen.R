@@ -3,6 +3,7 @@ library(stringr)
 library(sf)
 library(leaflet)
 library(htmltools)
+library(lubridate)
 
 
 # Importing and Cleaning Data ---------------------------------------------
@@ -24,7 +25,7 @@ tag.map.title <- tags$style(HTML("
   .leaflet-control.map-title { 
     transform: translate(0%,0%);
     position: fixed !important;
-    bottom: 0.75%;
+    bottom: 3%;
     text-align: center;
     padding-left: 0.3em; 
     padding-right: 0.3em; 
@@ -39,7 +40,25 @@ title <- tags$div(
   tag.map.title, HTML("UChicago Crime – SY23-24")
 )  
 
-# Stadia.AlidadeSmoothDark
+tag.map.subtitle <- tags$style(HTML("
+  .leaflet-control.map-subtitle { 
+    transform: translate(0%, 0%);
+    position: fixed !important;
+    bottom: 0%;
+    text-align: center;
+    padding-left: 0.3em; 
+    padding-right: 0.3em; 
+    background: rgba(255,255,255,0.5);
+    font-weight: bold;
+    font-size: 1.5em;
+    font-color: 'white';
+  }
+"))
+
+subtitle <- tags$div(
+  tag.map.subtitle, HTML(str_glue("Updated {format.Date(today(), '%m/%d/%Y')}"))
+)  
+
 leaflet_map <- leaflet(
   data = crime_sf,
   options = leafletOptions(minZoom = 15)
@@ -47,6 +66,9 @@ leaflet_map <- leaflet(
   addTiles() %>%
   addControl(
     title, position = "bottomleft", className="map-title"
+  ) %>% 
+  addControl(
+    subtitle,position = "bottomleft", className="map-subtitle"
   ) %>% 
   setView(
     lng = -87.594633, 
