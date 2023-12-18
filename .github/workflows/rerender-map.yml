@@ -19,7 +19,7 @@ jobs:
 
     - name: Install dependencies
       run: |
-        R -q -e 'install.packages(c("tidyverse", "DBI", "duckdb", "ggmap", "sf", "here", "leaflet", "htmltools"))'
+        R -q -e 'install.packages(c("dplyr", "stringr", "readr", "sf", "leaflet", "htmltools"))'
       # add more dependencies if needed
 
     - name: Run R script
