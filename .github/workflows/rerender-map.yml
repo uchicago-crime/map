@@ -30,6 +30,7 @@ jobs:
           any::sf
           any::leaflet
           any::htmltools
+          any::lubridate
 
     - name: Run R script
       run: Rscript scripts/leaflet-website-gen.R  # adjust the path to your R script
