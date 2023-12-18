@@ -1,24 +1,19 @@
-library(tidyverse)
-library(DBI)
-library(duckdb)
-library(ggmap)
+library(dplyr)
+library(stringr)
 library(sf)
-library(here)
 library(leaflet)
 library(htmltools)
 
 
 # Importing and Cleaning Data ---------------------------------------------
 
-con <- DBI::dbConnect(duckdb(), dbdir = here("data/duckdb/crime.db"))
-sql <- "SELECT * FROM crimes WHERE reported_date >= '2023-09-25'"
-
-crime_sf <- st_read(con, query = sql, geometry_column = "geometry") %>% 
+crime_sf <- read_csv("data/crime.csv") %>%
+  st_as_sf(coords = c("long", "lat")) %>% 
   mutate(
     Incident = if_else(str_detect(Incident, "Theft"), "Theft", Incident),
-    Incident = if_else(str_detect(Incident, "Armed Robbery"), 
+    Incident = if_else(str_detect(Incident, "Armed Robbery"),
                        "Armed Robbery", Incident),
-    Incident = if_else(str_detect(Incident, "Battery|Assault"), 
+    Incident = if_else(str_detect(Incident, "Battery|Assault"),
                        "Battery/Assault", Incident)
   )
 
