@@ -1,8 +1,8 @@
 name: Run R script and commit changes
 
-on:
-  schedule:
-    - cron: '0 10 * * *'  # trigger the workflow every day at 5am
+on: workflow_dispatch
+ # schedule:
+ #   - cron: '0 10 * * *'  # trigger the workflow every day at 5am
 
 jobs:
   run_r_script:
