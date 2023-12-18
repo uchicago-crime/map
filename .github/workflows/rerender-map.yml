@@ -8,6 +8,9 @@ jobs:
   run_r_script:
     runs-on: ubuntu-latest
 
+    permissions:
+     contents: write
+
     steps:
     - name: Checkout repository
       uses: actions/checkout@v3
@@ -31,10 +34,7 @@ jobs:
     - name: Run R script
       run: Rscript scripts/leaflet-website-gen.R  # adjust the path to your R script
 
-    - name: Commit changes
-      run: |
-        git config --global user.name "jcksanderson"
-        git config --global user.email "jackmsanderson@gmail.com"
-        git add .
-        git commit -m "Update data [skip ci]"
-        git push
+    - name: Commit Changes
+      uses: stefanzweifel/git-auto-commit-action@v5
+      with:
+        commit_message: Update Website
