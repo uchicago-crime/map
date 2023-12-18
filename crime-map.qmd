@@ -158,100 +158,46 @@ leaflet_map <- leaflet(
 leaflet_map
 
 htmlwidgets::saveWidget(leaflet_map, 
-                        file = "index.html", 
+                        file = here("docs/index.html"),
                         title = "SY23-24 UChicago Crime")
-```
-
-```{r}
-#| label: Hotspot Analysis
-hotspot_bounds <- c(
-    left = -87.610,
-    bottom = 41.783,
-    right = -87.583,
-    top = 41.805
-  )
-
-xlims <- c(-87.610, -87.583)
-ylims <- c(41.783, 41.805)
-
-box_coords <- tibble(x = xlims, y = ylims) %>% 
-  st_as_sf(coords = c("x", "y")) %>% 
-  st_set_crs(st_crs(crime_sf))
-
-bounding_box <- st_bbox(box_coords) %>% st_as_sfc()
-
-bounded_crime_sf <- st_intersection(crime_sf, bounding_box)
-
-hotspot_map <- get_stadiamap(
-    hotspot_bounds, 
-    zoom = 15, 
-    maptype = "alidade_smooth"
-  )
-
-
-grid <- st_make_grid(bounded_crime_sf, square = FALSE)
-
-valid_indices <- which(lengths(st_intersects(grid, bounded_crime_sf)) > 0)
-
-fishnet <- grid[valid_indices] %>% 
-  st_as_sf() %>% 
-  mutate(id = row_number())
-
-grid <- grid %>% 
-  st_as_sf() %>% 
-  mutate(id = row_number())
-
-crime_counts <- st_join(bounded_crime_sf, grid) %>% 
-  st_drop_geometry() %>% 
-  count(id)
-
-fin_map <- left_join(grid, crime_counts) %>% 
-  mutate(
-    n = if_else(is.na(n), 0, n)
-  )
-
-ggplot(fin_map, aes(fill = n)) + 
-  geom_sf(color = "black", lwd = 0.15) +
-  theme_void() +
-  scale_fill_viridis()
 ```
 
 
 
 ```{r}
 #| label: Shiny
-
-ui <- fillPage(
-  title = "UChicago Crime",
-  leafletOutput("leaflet_map", width = "100%", height = "100%"),
-  p()
-)
-
-server <- function(input, output, session) {
-  output$leaflet_map <- renderLeaflet({
-    leaflet(data = crime_sf) %>% 
-      addTiles() %>%
-      addControl(title, position = "bottomleft", className="map-title") %>% 
-      setView(lng = -87.594633, lat = 41.793983, zoom = 14) %>% 
-      addProviderTiles(providers$Stadia.AlidadeSmoothDark) %>% 
-      addCircleMarkers(
-        label = ~ str_glue("{Incident} on {Occurred}"), # line break only with popup
-        color = ~ if_else(Incident == "Armed Robbery", "red", 
-                          if_else(Incident == "Battery/Assault", "orange", "pink")),
-        fillOpacity = 0.8,
-        radius = ~ if_else(Incident == "Armed Robbery", 5, 
-                           if_else(Incident == "Battery/Assault", 4, 3)),
-        stroke = FALSE
-      ) %>% 
-      addLegend(
-        title = "Crime Type",
-        position = "bottomright",
-        colors = c("red", "orange", "pink"),
-        labels = c("Armed Robbery", "Battery/Assault", "Theft")
-      )
-  })
-}
-
-shinyApp(ui, server = server)
+# 
+# ui <- fillPage(
+#   title = "UChicago Crime",
+#   leafletOutput("leaflet_map", width = "100%", height = "100%"),
+#   p()
+# )
+# 
+# server <- function(input, output, session) {
+#   output$leaflet_map <- renderLeaflet({
+#     leaflet(data = crime_sf) %>% 
+#       addTiles() %>%
+#       addControl(title, position = "bottomleft", className="map-title") %>% 
+#       setView(lng = -87.594633, lat = 41.793983, zoom = 14) %>% 
+#       addProviderTiles(providers$Stadia.AlidadeSmoothDark) %>% 
+#       addCircleMarkers(
+#         label = ~ str_glue("{Incident} on {Occurred}"), # line break only with popup
+#         color = ~ if_else(Incident == "Armed Robbery", "red", 
+#                           if_else(Incident == "Battery/Assault", "orange", "pink")),
+#         fillOpacity = 0.8,
+#         radius = ~ if_else(Incident == "Armed Robbery", 5, 
+#                            if_else(Incident == "Battery/Assault", 4, 3)),
+#         stroke = FALSE
+#       ) %>% 
+#       addLegend(
+#         title = "Crime Type",
+#         position = "bottomright",
+#         colors = c("red", "orange", "pink"),
+#         labels = c("Armed Robbery", "Battery/Assault", "Theft")
+#       )
+#   })
+# }
+# 
+# shinyApp(ui, server = server)
 ```
 
