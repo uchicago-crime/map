@@ -7,7 +7,7 @@ library(htmltools)
 
 # Importing and Cleaning Data ---------------------------------------------
 
-crime_sf <- read_csv("data/crime.csv") %>%
+crime_sf <- read.csv("data/crime.csv") %>%
   st_as_sf(coords = c("long", "lat")) %>% 
   mutate(
     Incident = if_else(str_detect(Incident, "Theft"), "Theft", Incident),
