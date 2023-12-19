@@ -53,6 +53,14 @@ get_crime_df <- function(
   }
   
   crime_df <- bind_rows(crime_list)
+  
+  if (nrow(crime_df) == 0) {
+    if (exists("con")) {
+      dbDisconnect(con, shutdown = TRUE)
+    }
+    stop("No crimes to upload.")
+  }
+  
   return(crime_df)
 }
 
@@ -65,6 +73,7 @@ filter_crime_df <- function(crime_df) {
     mutate(
       Location = str_replace_all(Location, " \\(.*", "")
     )
+  
   return(filtered_df)
 }
 
@@ -154,7 +163,10 @@ if (file.exists(here("data/duckdb/crime.db"))) {
   )
 }
 
-
+sql <- "SELECT * FROM crimes WHERE reported_date > '2023-09-26'"
+sy_crime_sf <- st_read(con, query = sql)
+write_csv(sy_crime_sf, here("data/crime.csv"))
+dbDisconnect(con, shutdown = TRUE)
 
 
 
