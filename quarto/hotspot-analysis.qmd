@@ -5,6 +5,7 @@ format: html
 
 ```{r}
 #| label: setup
+#| include: false
 library(tidyverse)
 library(ggmap)
 library(DBI)
@@ -48,17 +49,22 @@ box_coords <- tibble(x = xlims, y = ylims) %>%
 
 grid <- st_make_grid(box_coords, n = 25, square = FALSE)
 
-grid <- grid %>% 
+chicago_shp <- read_sf(here("data/SHP_chicago/chicago.shp")) %>% 
+  st_set_crs(st_crs(crime_sf))
+
+chi_grid <- st_intersection(chicago_shp, grid)
+
+chi_grid <- chi_grid %>% 
   st_as_sf() %>% 
   mutate(id = row_number())
 
 crime_counts <- st_join(crime_sf %>% 
                           filter(str_detect(Incident, "Armed Robbery")), 
-                        grid) %>% 
+                        chi_grid) %>% 
   st_drop_geometry() %>% 
   count(id, name = "crimes")
 
-crime_hex <- left_join(grid, crime_counts) %>% 
+crime_hex <- left_join(chi_grid, crime_counts) %>% 
   mutate(
     crimes = if_else(is.na(crimes), 0, crimes)
   )
@@ -80,7 +86,7 @@ ggmap(hotspot_map) +
 
 crime_lag <- crime_hex %>% 
   mutate(
-    neighbors = st_contiguity(x),
+    neighbors = st_contiguity(geometry),
     weights = st_weights(neighbors),
     crimes_lag = st_lag(crimes, neighbors, weights)
   )

@@ -43,7 +43,7 @@ chicago <- read_sf(
   here(
     "data",
     "SHP_chicago-communities",
-    "geo_export_e07d67fa-91ce-4d30-9da3-eb903021731c.shp"
+    "communities.shp"
   )
 )
 
