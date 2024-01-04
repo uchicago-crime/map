@@ -25,7 +25,6 @@ crime_sf <- st_read(con, query = sql, geometry_column = "geometry")
 
 ```{r}
 #| label: Netting and Mapping
-
 # ggmap
 hotspot_bounds <- c(
     left = -87.610,
