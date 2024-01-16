@@ -1,6 +1,6 @@
 ---
-title: "hotspot-analysis"
-format: html
+title: "UChicago Armed Robbery Hotspot Analysis"
+format: gfm
 ---
 
 ```{r}
@@ -24,7 +24,8 @@ crime_sf <- st_read(con, query = sql, geometry_column = "geometry")
 ```
 
 ```{r}
-#| label: Netting and Mapping
+#| label: Netting the Data
+
 # ggmap
 hotspot_bounds <- c(
     left = -87.610,
@@ -73,16 +74,66 @@ ggplot(crime_hex, aes(fill = crimes)) +
   geom_sf(color = "black", lwd = 0.15) +
   theme_void() +
   scale_fill_viridis_c()
-
-ggmap(hotspot_map) +
-  geom_sf(data = crime_hex, aes(fill = crimes), inherit.aes = FALSE,
-          color = "black", lwd = 0, alpha = 0.5) +
-  theme_void() +
-  scale_fill_viridis_c()
 ```
 
 ```{r}
-#| label: Hotspot Analysis
+#| label: Mapping Raw Values 
+#| warning: false
+
+robbery_map <- ggmap(hotspot_map) +
+  geom_sf(data = crime_hex, aes(fill = crimes), inherit.aes = FALSE,
+          color = "black", lwd = 0, alpha = 0.5) +
+  theme_void() +
+  labs(
+    title = "UChicago Armed Robberies",
+    fill = "Armed Robberies",
+    alpha = "Armed Robberies",
+    caption = "Source: UCPD Crime Data, 2020-2023"
+  ) +
+  scale_fill_viridis_c(
+    direction = -1,
+    guide = guide_colorbar(
+      ticks.colour = "black", 
+      ticks.linewidth = 2/.pt,
+      frame.colour = "black",
+      frame.linewidth = 3/.pt
+    )
+  ) +
+  scale_alpha_continuous() +
+  theme(
+    plot.background = element_rect(fill = "gray10",
+                                   color = "gray10"),
+    
+    plot.title = element_text(family = "Space Grotesk",
+                              face = "bold",
+                              size = 22,
+                              color = "white",
+                              margin = margin(0, 0, 5,)),
+    legend.title = element_text(family = "Space Grotesk Semibold",
+                                color = "white"),
+    legend.text = element_text(family = "Space Grotesk",
+                                color = "white"),
+    plot.caption = element_text(family = "Space Grotesk",
+                                color = "white",
+                                hjust = 0),
+    plot.margin = margin(5, 5, 5, 5)
+  )
+
+ggdraw(robbery_map) +
+  theme(
+    plot.background = element_rect(fill = "gray10",
+                                   color = "gray10")
+  )
+
+ggsave(
+  here("plots/armed-robberies.png"), 
+  width = 8,
+  height = 4.5
+)
+```
+
+```{r}
+#| label: Performing Hotspot Analysis
 
 crime_lag <- crime_hex %>% 
   mutate(
@@ -138,12 +189,8 @@ ggplot(crime_hotspots,
 
 ```
 
-
-
-
-
 ```{r}
-#| label: Hotspot Mapping
+#| label: Mapping Hotspots
 #| warning: false
 
 legend_labels <- c(
