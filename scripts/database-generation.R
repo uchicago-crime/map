@@ -69,7 +69,7 @@ get_crime_df <- function(
 
 filter_crime_df <- function(crime_df) {
   filtered_df <- crime_df %>% 
-    filter(str_detect(Incident, "Theft|Armed Robbery|Battery|Assault")) %>% 
+    filter(str_detect(Incident, "Theft|Robbery|Battery|Assault")) %>% 
     mutate(
       Location = str_replace_all(Location, " \\(.*", "")
     )

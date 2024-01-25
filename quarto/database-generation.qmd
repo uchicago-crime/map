@@ -71,7 +71,7 @@ get_crime_df <- function(
 #| label: Defining Filtering Functions
 filter_crime_df <- function(crime_df) {
   filtered_df <- crime_df %>% 
-    filter(str_detect(Incident, "Theft|Armed Robbery|Battery|Assault")) %>% 
+    filter(str_detect(Incident, "Theft|Robbery|Battery|Assault")) %>% 
     mutate(
       Location = str_replace_all(Location, " \\(.*", "")
     )
@@ -118,7 +118,7 @@ if (file.exists(here("data/duckdb/crime.db"))) {
   new_date <- dbGetQuery(
     con,
     "SELECT MAX (reported_date) AS 'Max Date' FROM crimes"
-  )[1,] + 1
+  )[1,] + 0
   
   crime_df <- get_crime_df(new_date) %>% 
     filter_crime_df() %>% 
@@ -141,7 +141,7 @@ if (file.exists(here("data/duckdb/crime.db"))) {
   dbRemoveTable(con, "crimes_temp")
   
 } else {
-  
+  dir.create(here("data/duckdb/"))
   con <- DBI::dbConnect(duckdb(), dbdir = here("data/duckdb/crime.db"))
     
   status <- DBI::dbExecute(con, "INSTALL 'spatial';")
@@ -163,6 +163,11 @@ if (file.exists(here("data/duckdb/crime.db"))) {
      ALTER TABLE crimes DROP report_date"
   )
 }
+
+sql <- "SELECT * FROM crimes WHERE reported_date > '2023-09-26'"
+sy_crime_sf <- st_read(con, query = sql)
+write_csv(sy_crime_sf, here("data/crime.csv"))
+dbDisconnect(con, shutdown = TRUE)
 ```
 
 

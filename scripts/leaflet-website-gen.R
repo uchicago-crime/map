@@ -12,7 +12,7 @@ crime_sf <- read.csv("data/crime.csv") %>%
   st_as_sf(coords = c("long", "lat")) %>% 
   mutate(
     Incident = if_else(str_detect(Incident, "Theft"), "Theft", Incident),
-    Incident = if_else(str_detect(Incident, "Armed Robbery"),
+    Incident = if_else(str_detect(Incident, "Robbery"),
                        "Armed Robbery", Incident),
     Incident = if_else(str_detect(Incident, "Battery|Assault"),
                        "Battery/Assault", Incident)
