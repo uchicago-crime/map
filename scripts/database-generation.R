@@ -2,7 +2,6 @@ library(tidyverse)
 library(rvest)
 library(tidygeocoder)
 library(sf)
-library(here)
 library(duckdb)
 library(DBI)
 
@@ -110,9 +109,9 @@ geocode_crime_df <- function(crime_df) {
 
 # Creating Database -------------------------------------------------------
 
-if (file.exists(here("data/duckdb/crime.db"))) {
+if (file.exists("data/duckdb/crime.db")) {
   
-  con <- DBI::dbConnect(duckdb(), dbdir = here("data/duckdb/crime.db"))
+  con <- DBI::dbConnect(duckdb(), dbdir = "data/duckdb/crime.db")
   
   new_date <- dbGetQuery(
     con,
@@ -141,7 +140,7 @@ if (file.exists(here("data/duckdb/crime.db"))) {
   
 } else {
   
-  con <- DBI::dbConnect(duckdb(), dbdir = here("data/duckdb/crime.db"))
+  con <- DBI::dbConnect(duckdb(), dbdir = "data/duckdb/crime.db")
   
   status <- DBI::dbExecute(con, "INSTALL 'spatial';")
   status <- DBI::dbExecute(con, "LOAD 'spatial';")
@@ -165,7 +164,7 @@ if (file.exists(here("data/duckdb/crime.db"))) {
 
 sql <- "SELECT * FROM crimes WHERE reported_date > '2023-09-26'"
 sy_crime_sf <- st_read(con, query = sql)
-write_csv(sy_crime_sf, here("data/crime.csv"))
+write_csv(sy_crime_sf, "data/crime.csv")
 dbDisconnect(con, shutdown = TRUE)
 
 
