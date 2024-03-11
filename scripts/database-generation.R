@@ -1,4 +1,5 @@
-library(tidyverse)
+library(dplyr)
+library(stringr)
 library(rvest)
 library(tidygeocoder)
 library(sf)
