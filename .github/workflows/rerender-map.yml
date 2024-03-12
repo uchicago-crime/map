@@ -34,7 +34,7 @@ jobs:
           any::lubridate
 
     - name: update map
-      run: Rscript scripts/leaflet-website-gen.R
+      run: Rscript R/scripts/leaflet-website-gen.R
 
     - name: commit changes
       uses: stefanzweifel/git-auto-commit-action@v5
