@@ -28,7 +28,6 @@ jobs:
         packages: |
           any::dplyr
           any::stringr
-          any::readr
           any::rvest
           any::tidygeocoder
           any::sf
