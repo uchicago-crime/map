@@ -1,5 +1,4 @@
 library(dplyr)
-library(readr)
 library(stringr)
 library(rvest)
 library(tidygeocoder)
@@ -112,7 +111,7 @@ geocode_crime_df <- function(crime_df) {
 
 if (file.exists("data/23-24_crime.csv")) {
   
-  old_csv <- read_csv("data/23-24_crime.csv")
+  old_csv <- read.csv("data/23-24_crime.csv")
   last_date = as_date(mdy_hm(tail(old_csv, n = 1)$Reported))
   
   if (last_date != today() - 1 && last_date != today()) {
@@ -122,7 +121,7 @@ if (file.exists("data/23-24_crime.csv")) {
     
     crime_df <- bind_rows(old_csv, new_df)
     
-    write_csv(crime_df, "data/23-24_crime.csv")
+    write.csv(crime_df, "data/23-24_crime.csv")
   }
   
 } else {
@@ -130,5 +129,5 @@ if (file.exists("data/23-24_crime.csv")) {
     filter_crime_df() %>% 
     geocode_crime_df()
   
-  write_csv(crime_df, "data/23-24_crime.csv")
+  write.csv(crime_df, "data/23-24_crime.csv")
 }
