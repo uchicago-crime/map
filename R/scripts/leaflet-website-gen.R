@@ -8,7 +8,7 @@ library(lubridate)
 
 # Importing and Cleaning Data ---------------------------------------------
 
-crime_sf <- read.csv("data/crime.csv") %>%
+crime_sf <- read.csv("data/23-24_crime.csv") %>%
   st_as_sf(coords = c("long", "lat")) %>% 
   mutate(
     Incident = if_else(str_detect(Incident, "Theft"), "Theft", Incident),
