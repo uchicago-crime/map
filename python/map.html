@@ -1,0 +1,327 @@
+<!DOCTYPE html>
+<html>
+<head>
+    
+    <meta http-equiv="content-type" content="text/html; charset=UTF-8" />
+    <script>L_PREFER_CANVAS=false; L_NO_TOUCH=false; L_DISABLE_3D=false;</script>
+    <script src="https://cdn.jsdelivr.net/npm/leaflet@1.2.0/dist/leaflet.js"></script>
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.11.1/jquery.min.js"></script>
+    <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.2.0/js/bootstrap.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/Leaflet.awesome-markers/2.0.2/leaflet.awesome-markers.js"></script>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/leaflet@1.2.0/dist/leaflet.css"/>
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.2.0/css/bootstrap.min.css"/>
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.2.0/css/bootstrap-theme.min.css"/>
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/font-awesome/4.6.3/css/font-awesome.min.css"/>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/Leaflet.awesome-markers/2.0.2/leaflet.awesome-markers.css"/>
+    <link rel="stylesheet" href="https://rawgit.com/python-visualization/folium/master/folium/templates/leaflet.awesome.rotate.css"/>
+    <style>html, body {width: 100%;height: 100%;margin: 0;padding: 0;}</style>
+    <style>#map {position:absolute;top:0;bottom:0;right:0;left:0;}</style>
+    
+    <style>#map_86e45cfcee9534f8684e9f350e284473 {
+        position: relative;
+        width: 100.0%;
+        height: 100.0%;
+        left: 0.0%;
+        top: 0.0%;
+        }
+    </style>
+</head>
+<body>
+    
+    
+    <div class="folium-map" id="map_86e45cfcee9534f8684e9f350e284473" ></div>
+</body>
+<script>
+    
+    
+    
+        var southWest = L.latLng(41.783, -87.61);
+        var northEast = L.latLng(41.805, -87.583);
+        var bounds = L.latLngBounds(southWest, northEast);
+    
+
+    var map_86e45cfcee9534f8684e9f350e284473 = L.map(
+        'map_86e45cfcee9534f8684e9f350e284473', {
+        center: [41.793983, -87.594633],
+        zoom: 14,
+        maxBounds: bounds,
+        layers: [],
+        worldCopyJump: false,
+        crs: L.CRS.EPSG3857,
+        zoomControl: true,
+        });
+
+    
+    
+    var tile_layer_0c0203d2ebd241237116361905aa3fdb = L.tileLayer(
+        'https://cartodb-basemaps-{s}.global.ssl.fastly.net/light_all/{z}/{x}/{y}.png',
+        {
+        "attribution": null,
+        "detectRetina": false,
+        "maxNativeZoom": 18,
+        "maxZoom": 18,
+        "minZoom": 14,
+        "noWrap": false,
+        "subdomains": "abc"
+}).addTo(map_86e45cfcee9534f8684e9f350e284473);
+    
+            var circle_marker_a8172f9a6f60b8cbd92486c29d1ed957 = L.circleMarker(
+                [41.79506011114963, -87.58801846404788],
+                {
+  "bubblingMouseEvents": true,
+  "color": "#3388ff",
+  "dashArray": null,
+  "dashOffset": null,
+  "fill": true,
+  "fillColor": "pink",
+  "fillOpacity": 0.85,
+  "fillRule": "evenodd",
+  "lineCap": "round",
+  "lineJoin": "round",
+  "opacity": 1.0,
+  "radius": 5,
+  "stroke": false,
+  "weight": 3
+}
+                )
+                .addTo(map_86e45cfcee9534f8684e9f350e284473);
+            
+    
+            var popup_7636da4c9654b51bd2ae116873c75c67 = L.popup({maxWidth: '300'
+            
+            });
+
+            
+                var html_30311ed9dd72aebd43f809d05a15e145 = $('<div id="html_30311ed9dd72aebd43f809d05a15e145" style="width: 100.0%; height: 100.0%;">Theft</div>')[0];
+                popup_7636da4c9654b51bd2ae116873c75c67.setContent(html_30311ed9dd72aebd43f809d05a15e145);
+            
+
+            circle_marker_a8172f9a6f60b8cbd92486c29d1ed957.bindPopup(popup_7636da4c9654b51bd2ae116873c75c67)
+            ;
+
+            
+        
+    
+            var circle_marker_5f04adc092daa2796be38c59c91b61cb = L.circleMarker(
+                [41.7901397, -87.60411773465978],
+                {
+  "bubblingMouseEvents": true,
+  "color": "#3388ff",
+  "dashArray": null,
+  "dashOffset": null,
+  "fill": true,
+  "fillColor": "orange",
+  "fillOpacity": 0.85,
+  "fillRule": "evenodd",
+  "lineCap": "round",
+  "lineJoin": "round",
+  "opacity": 1.0,
+  "radius": 5,
+  "stroke": false,
+  "weight": 3
+}
+                )
+                .addTo(map_86e45cfcee9534f8684e9f350e284473);
+            
+    
+            var popup_090e466015977068e0fc3224bb29322b = L.popup({maxWidth: '300'
+            
+            });
+
+            
+                var html_bf3e67d6351707ec628f96ff828b60a6 = $('<div id="html_bf3e67d6351707ec628f96ff828b60a6" style="width: 100.0%; height: 100.0%;">Battery/Assault</div>')[0];
+                popup_090e466015977068e0fc3224bb29322b.setContent(html_bf3e67d6351707ec628f96ff828b60a6);
+            
+
+            circle_marker_5f04adc092daa2796be38c59c91b61cb.bindPopup(popup_090e466015977068e0fc3224bb29322b)
+            ;
+
+            
+        
+    
+            var circle_marker_9d35164c58003e02d0d83db1cfcea7ee = L.circleMarker(
+                [41.792022349999996, -87.60553881538303],
+                {
+  "bubblingMouseEvents": true,
+  "color": "#3388ff",
+  "dashArray": null,
+  "dashOffset": null,
+  "fill": true,
+  "fillColor": "orange",
+  "fillOpacity": 0.85,
+  "fillRule": "evenodd",
+  "lineCap": "round",
+  "lineJoin": "round",
+  "opacity": 1.0,
+  "radius": 5,
+  "stroke": false,
+  "weight": 3
+}
+                )
+                .addTo(map_86e45cfcee9534f8684e9f350e284473);
+            
+    
+            var popup_d153678f8931bece86c2e20687853283 = L.popup({maxWidth: '300'
+            
+            });
+
+            
+                var html_85765970b64be0e73c31fd199638edc2 = $('<div id="html_85765970b64be0e73c31fd199638edc2" style="width: 100.0%; height: 100.0%;">Battery/Assault</div>')[0];
+                popup_d153678f8931bece86c2e20687853283.setContent(html_85765970b64be0e73c31fd199638edc2);
+            
+
+            circle_marker_9d35164c58003e02d0d83db1cfcea7ee.bindPopup(popup_d153678f8931bece86c2e20687853283)
+            ;
+
+            
+        
+    
+            var circle_marker_656a1638bb7981dea5a474020ece491e = L.circleMarker(
+                [41.78824315, -87.59107239608538],
+                {
+  "bubblingMouseEvents": true,
+  "color": "#3388ff",
+  "dashArray": null,
+  "dashOffset": null,
+  "fill": true,
+  "fillColor": "pink",
+  "fillOpacity": 0.85,
+  "fillRule": "evenodd",
+  "lineCap": "round",
+  "lineJoin": "round",
+  "opacity": 1.0,
+  "radius": 5,
+  "stroke": false,
+  "weight": 3
+}
+                )
+                .addTo(map_86e45cfcee9534f8684e9f350e284473);
+            
+    
+            var popup_9f45e082a21cb4bc10f97279c831d0db = L.popup({maxWidth: '300'
+            
+            });
+
+            
+                var html_65580b4390ad51a26706f393595b2d08 = $('<div id="html_65580b4390ad51a26706f393595b2d08" style="width: 100.0%; height: 100.0%;">Theft</div>')[0];
+                popup_9f45e082a21cb4bc10f97279c831d0db.setContent(html_65580b4390ad51a26706f393595b2d08);
+            
+
+            circle_marker_656a1638bb7981dea5a474020ece491e.bindPopup(popup_9f45e082a21cb4bc10f97279c831d0db)
+            ;
+
+            
+        
+    
+            var circle_marker_d4bf77bc8a6e5fb55ca3535141a3dadc = L.circleMarker(
+                [41.792022349999996, -87.60553881538303],
+                {
+  "bubblingMouseEvents": true,
+  "color": "#3388ff",
+  "dashArray": null,
+  "dashOffset": null,
+  "fill": true,
+  "fillColor": "orange",
+  "fillOpacity": 0.85,
+  "fillRule": "evenodd",
+  "lineCap": "round",
+  "lineJoin": "round",
+  "opacity": 1.0,
+  "radius": 5,
+  "stroke": false,
+  "weight": 3
+}
+                )
+                .addTo(map_86e45cfcee9534f8684e9f350e284473);
+            
+    
+            var popup_b167d626c372cfe22aa36ebf9373a862 = L.popup({maxWidth: '300'
+            
+            });
+
+            
+                var html_4b87271c6b62c822a8948a05f33ed27c = $('<div id="html_4b87271c6b62c822a8948a05f33ed27c" style="width: 100.0%; height: 100.0%;">Battery/Assault</div>')[0];
+                popup_b167d626c372cfe22aa36ebf9373a862.setContent(html_4b87271c6b62c822a8948a05f33ed27c);
+            
+
+            circle_marker_d4bf77bc8a6e5fb55ca3535141a3dadc.bindPopup(popup_b167d626c372cfe22aa36ebf9373a862)
+            ;
+
+            
+        
+    
+            var circle_marker_bdd920e0c2477253126b4442b55c87f6 = L.circleMarker(
+                [41.7891965, -87.6044884],
+                {
+  "bubblingMouseEvents": true,
+  "color": "#3388ff",
+  "dashArray": null,
+  "dashOffset": null,
+  "fill": true,
+  "fillColor": "pink",
+  "fillOpacity": 0.85,
+  "fillRule": "evenodd",
+  "lineCap": "round",
+  "lineJoin": "round",
+  "opacity": 1.0,
+  "radius": 5,
+  "stroke": false,
+  "weight": 3
+}
+                )
+                .addTo(map_86e45cfcee9534f8684e9f350e284473);
+            
+    
+            var popup_ea782672dba75a37f410de68a7a53a19 = L.popup({maxWidth: '300'
+            
+            });
+
+            
+                var html_31c3bdde287a7c780fea1b4378fa5c0c = $('<div id="html_31c3bdde287a7c780fea1b4378fa5c0c" style="width: 100.0%; height: 100.0%;">Theft</div>')[0];
+                popup_ea782672dba75a37f410de68a7a53a19.setContent(html_31c3bdde287a7c780fea1b4378fa5c0c);
+            
+
+            circle_marker_bdd920e0c2477253126b4442b55c87f6.bindPopup(popup_ea782672dba75a37f410de68a7a53a19)
+            ;
+
+            
+        
+    
+            var circle_marker_359982f6a8aff07cca43cf237f51368f = L.circleMarker(
+                [41.791225350000005, -87.59881297139941],
+                {
+  "bubblingMouseEvents": true,
+  "color": "#3388ff",
+  "dashArray": null,
+  "dashOffset": null,
+  "fill": true,
+  "fillColor": "pink",
+  "fillOpacity": 0.85,
+  "fillRule": "evenodd",
+  "lineCap": "round",
+  "lineJoin": "round",
+  "opacity": 1.0,
+  "radius": 5,
+  "stroke": false,
+  "weight": 3
+}
+                )
+                .addTo(map_86e45cfcee9534f8684e9f350e284473);
+            
+    
+            var popup_84292a34fa406a300ef72389a862b545 = L.popup({maxWidth: '300'
+            
+            });
+
+            
+                var html_8dccca8092321c22371cdb27ceda5d63 = $('<div id="html_8dccca8092321c22371cdb27ceda5d63" style="width: 100.0%; height: 100.0%;">Theft</div>')[0];
+                popup_84292a34fa406a300ef72389a862b545.setContent(html_8dccca8092321c22371cdb27ceda5d63);
+            
+
+            circle_marker_359982f6a8aff07cca43cf237f51368f.bindPopup(popup_84292a34fa406a300ef72389a862b545)
+            ;
+
+            
+        
+</script>
+</html>
