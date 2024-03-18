@@ -4,6 +4,7 @@ library(rvest)
 library(tidygeocoder)
 library(sf)
 library(lubridate)
+library(here)
 
 
 # Defining Crime Collecting Functions -------------------------------------
@@ -71,7 +72,9 @@ filter_crime_df <- function(crime_df) {
     filter(str_detect(Incident, "Theft|Robbery|Battery|Assault")) %>% 
     mutate(
       Location = str_replace_all(Location, " \\(.*", "")
-    )
+    ) %>% 
+    rename(Comments = "Comments / Nature of Fire") %>% 
+    rename(ID = "UCPDI#")
   
   return(filtered_df)
 }
@@ -109,19 +112,19 @@ geocode_crime_df <- function(crime_df) {
 
 # Creating CSV ------------------------------------------------------------
 
-if (file.exists("data/23-24_crime.csv")) {
+if (file.exists(here("data/23-24_crime.csv"))) {
   
-  old_csv <- read.csv("data/23-24_crime.csv")
-  last_date = as_date(mdy_hm(tail(old_csv, n = 1)$Reported))
+  old_csv <- read.csv(here("data/23-24_crime.csv"))
+  last_date <- mdy(tail(old_csv, n = 1)$report_date)
   
-  if (last_date != today() - 1 && last_date != today()) {
+  if (last_date != today() - 1) {
     new_df <- get_crime_df(last_date) %>% 
       filter_crime_df() %>% 
       geocode_crime_df()
     
     crime_df <- bind_rows(old_csv, new_df)
     
-    write.csv(crime_df, "data/23-24_crime.csv")
+    write.csv(crime_df, here("data/23-24_crime.csv"), row.names = FALSE)
   }
   
 } else {
@@ -129,5 +132,5 @@ if (file.exists("data/23-24_crime.csv")) {
     filter_crime_df() %>% 
     geocode_crime_df()
   
-  write.csv(crime_df, "data/23-24_crime.csv")
+  write.csv(crime_df, here("data/23-24_crime.csv"), row.names = FALSE)
 }
