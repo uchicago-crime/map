@@ -4,7 +4,6 @@ library(rvest)
 library(tidygeocoder)
 library(sf)
 library(lubridate)
-library(here)
 
 
 # Defining Crime Collecting Functions -------------------------------------
@@ -112,9 +111,9 @@ geocode_crime_df <- function(crime_df) {
 
 # Creating CSV ------------------------------------------------------------
 
-if (file.exists(here("data/23-24_crime.csv"))) {
+if (file.exists("data/23-24_crime.csv")) {
   
-  old_csv <- read.csv(here("data/23-24_crime.csv"))
+  old_csv <- read.csv("data/23-24_crime.csv")
   last_date <- mdy(tail(old_csv, n = 1)$report_date)
   
   if (last_date != today() - 1) {
@@ -124,7 +123,7 @@ if (file.exists(here("data/23-24_crime.csv"))) {
     
     crime_df <- bind_rows(old_csv, new_df)
     
-    write.csv(crime_df, here("data/23-24_crime.csv"), row.names = FALSE)
+    write.csv(crime_df, "data/23-24_crime.csv", row.names = FALSE)
   }
   
 } else {
@@ -132,5 +131,5 @@ if (file.exists(here("data/23-24_crime.csv"))) {
     filter_crime_df() %>% 
     geocode_crime_df()
   
-  write.csv(crime_df, here("data/23-24_crime.csv"), row.names = FALSE)
+  write.csv(crime_df, "data/23-24_crime.csv", row.names = FALSE)
 }
